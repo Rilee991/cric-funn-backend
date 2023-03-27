@@ -1,0 +1,22 @@
+{
+  "name": "cric-funn-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rilee991/cric-funn-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rilee991/cric-funn-backend/issues"
+  },
+  "homepage": "https://github.com/Rilee991/cric-funn-backend#readme",
+  "dependencies": {
+    "moment": "^2.29.4"
+  }
+}
