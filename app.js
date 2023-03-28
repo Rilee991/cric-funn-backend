@@ -58,10 +58,10 @@ const start = () => {
     admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
     console.log(process.env.NODE_ENV);
 
-    const timer = "0 5 * * *";
+    const timer = "* * * * *";
     console.log(`Timer: ${timer}`);
 
-    cron.schedule(timer, updateOddsForIpl);
+    cron.schedule(timer, () => { console.log("logged") });
 }
 
 start();
