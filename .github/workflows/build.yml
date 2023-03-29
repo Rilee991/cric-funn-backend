@@ -22,5 +22,5 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Run script
+      - name: Run scripts
         run: node app.js
