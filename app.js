@@ -53,16 +53,11 @@ const getUpcomingOdds = async () => {
     return oddsResp;
 }
 
-const consoles = () => {
-    console.log("yes");
-}
-
 const start = async () => {
     console.log(`Job started at ${new Date()}`);
-    cron.schedule("* * * * *", consoles);
-    // admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
-    // console.log(`Env Vars: ${process.env.NODE_ENV}`);
-    // await updateOddsForIpl();
+    admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
+    console.log(`Env Vars: ${process.env.NODE_ENV}`);
+    cron.schedule("0 5 * * *", updateOddsForIpl);
     console.log(`Job ended at ${new Date()}`);
 }
 
