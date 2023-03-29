@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: '* * * * *' # runs every day at 5am
+    - cron: '* 20 * * *' # runs every day at 5am
 
 jobs:
   updating-odds-script:
