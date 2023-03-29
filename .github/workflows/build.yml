@@ -1,12 +1,21 @@
-on: push
+name: Run Node.js script on a schedule
+
+on:
+  push:
+  schedule:
+    - cron: "* * * * 1"
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build-node:
+  build:
     runs-on: ubuntu-latest
-    container: node:16
     steps:
-      - run: node --version
-      - run: npm --version
       - uses: actions/checkout@v3
-      - run: ls
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
       - run: npm install
-      - run: node app.js
+      - name: Run script
+        run: npm start
+        env:
+          NODE_ENV: ${{ secrets.NODE_ENV }}

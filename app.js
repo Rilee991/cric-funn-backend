@@ -55,13 +55,26 @@ const getUpcomingOdds = async () => {
 
 const start = () => {
     console.log(`Cron Job Initializing`);
-    admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
+    // admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
     console.log(process.env.NODE_ENV);
 
-    const timer = "0 5 * * *";
-    console.log(`Timer: ${timer}`);
+    // const timer = "0 5 * * *";
+    // console.log(`Timer: ${timer}`);
 
-    cron.schedule(timer, updateOddsForIpl);
+    // cron.schedule(timer, updateOddsForIpl);
+
+//     on: push
+// jobs:
+//   build-node:
+//     runs-on: ubuntu-latest
+//     container: node:16
+//     steps:
+//       - run: node --version
+//       - run: npm --version
+//       - uses: actions/checkout@v3
+//       - run: ls
+//       - run: npm install
+//       - run: node app.js
 }
 
 start();
