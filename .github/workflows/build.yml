@@ -1,8 +1,9 @@
 name: Cron Job
 
 on:
+  push:
   schedule:
-    - cron: '0 14 * * *' # runs every day at 5am
+    - cron: '0 17 * * *' # runs every day at 5am
 
 jobs:
   updating-odds-script:
