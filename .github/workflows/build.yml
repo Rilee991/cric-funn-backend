@@ -16,6 +16,6 @@ jobs:
           node-version: '12.x'
       - run: npm install
       - name: Run script
-        run: npm start
+        run: node app.js
         env:
           NODE_ENV: ${{ secrets.NODE_ENV }}
