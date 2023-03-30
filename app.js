@@ -59,7 +59,7 @@ const consoles = () => {
 
 const start = async () => {
     console.log(`Job started at ${new Date()}`);
-    admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
+    // admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
     // console.log(`Env Vars: ${process.env.FIREBASE_PRIVATE_KEY}`);
     cron.schedule("* * * * *", consoles);
     console.log(`Job ended at ${new Date()}`);
