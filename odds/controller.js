@@ -1,17 +1,12 @@
-const cron = require('node-cron');
 const admin = require('firebase-admin');
 const moment = require('moment');
 const axios = require('axios');
 const { get } = require('lodash');
-require('dotenv').config();
 
-
-const { firebaseConfig } = require('./config');
-
-const updateOddsForIpl = async () => {
+const updateOddsForIpl = async (req, res) => {
     try {
+        const { db } = await global.cricFunnBackend;
         console.log(`Inside updateOddsForIpl: start - ${new Date()}`);
-        const db = await admin.firestore();
         const tomorrowStartDate = moment().add(1,"day").startOf("day").toISOString();
         const tomorrowEndDate = moment().add(1,"day").endOf("day").toISOString();
         console.log(`startdate: ${tomorrowStartDate}, enddate: ${tomorrowEndDate}`);
@@ -35,8 +30,14 @@ const updateOddsForIpl = async () => {
             });
         }
         console.log(`Updation completed for ${new Date()}`);
+
+        res.json({ msg: 'odds updated successfully'});
     } catch (e) {
         console.log(e);
+        res.status(500).json({
+            message: "Failed to update odds",
+            error: e
+        });
     }
 }
 
@@ -53,17 +54,6 @@ const getUpcomingOdds = async () => {
     return oddsResp;
 }
 
-const consoles = () => {
-    console.log(firebaseConfig);
+module.exports = {
+    updateOddsForIpl
 }
-
-const start = async () => {
-    console.log(`Job started at ${new Date()}`);
-    firebaseConfig.private_key = JSON.parse(firebaseConfig.private_key).privateKey;
-    admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
-    // console.log(`Env Vars: ${process.env.FIREBASE_PRIVATE_KEY}`);
-    cron.schedule("* * * * *", updateOddsForIpl);
-    console.log(`Job ended at ${new Date()}`);
-}
-
-start();

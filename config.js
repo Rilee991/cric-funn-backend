@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const firebaseConfig = {
     "type": process.env.FIREBASE_CONFIGS_TYPE,
     "project_id": process.env.FIREBASE_PROJECT_ID,

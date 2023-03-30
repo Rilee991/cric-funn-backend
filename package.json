@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,7 +19,10 @@
   "homepage": "https://github.com/Rilee991/cric-funn-backend#readme",
   "dependencies": {
     "axios": "^1.3.4",
+    "body-parser": "^1.20.1",
     "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-promise-router": "^4.1.1",
     "firebase-admin": "^11.5.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
