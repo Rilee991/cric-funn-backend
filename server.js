@@ -18,7 +18,7 @@ app.use(bodyParser.json({limit: '10mb'}));
 
 const port = 3000;
 
-app.use('/cric-funn-backend/', apiRoutes());
+app.use('/cfb/', apiRoutes());
 
 app.listen(port, () => {
   console.log(`Server listening at ${port}`);
