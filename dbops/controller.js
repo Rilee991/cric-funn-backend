@@ -49,7 +49,7 @@ const createExcel = (docs) => {
 }
 
 const restoreDataForUsername = async (req, res) => {
-    const { username } = req.body;
+    const { username = "batman" } = req.body;
 
     try {
         const { db } = await global.cricFunnBackend;
@@ -61,15 +61,29 @@ const restoreDataForUsername = async (req, res) => {
         const excelSheet = new Excel.Workbook();
         
         await excelSheet.xlsx.load(excelBuff.data);
-        const userData = excelSheet.getWorksheet("Broly");
-        const rows = userData.getRow();
+        const userData = excelSheet.getWorksheet(username);
+        const keys = userData.getRow(1).values;
+        const vals = userData.getRow(2).values;
+        const toBeSaved = ['points','bets'];
+        const userObj = {};
 
-        rows.forEach(row => {
-            const bets = row.bets;
-            const points = row.points;
+        keys.forEach((key,idx) => {
+            if(toBeSaved.includes(key)) {
+                if(key == "bets") {
+                    const bets = JSON.parse(vals[idx]);
 
-            console.log(points);
-        })
+                    bets.forEach(bet => {
+                        bet.betTime = admin.firestore.Timestamp.fromDate(new Date(bet.betTime._seconds*1000));
+                    });
+
+                    userObj[key] = bets;
+                } else {
+                    userObj[key] = vals[idx]
+                }
+            }
+        });
+
+        await db.collection("users").doc(username).update(userObj);
 
         return res.status(200).json({ message: "Backup restored for user:", username});
     } catch (e) {
