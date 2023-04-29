@@ -6,11 +6,13 @@ const apiRoutes = require('./routes');
 const { firebaseConfig } = require('./config');
 
 firebaseConfig.private_key = JSON.parse(firebaseConfig.private_key).privateKey;
-admin.initializeApp({ credential: admin.credential.cert(firebaseConfig) });
+admin.initializeApp({ credential: admin.credential.cert(firebaseConfig), storageBucket: 'cric-funn.appspot.com' });
 const db = admin.firestore();
+const bucket = admin.storage().bucket();
 
 global.cricFunnBackend = {};
 global.cricFunnBackend["db"] = db;
+global.cricFunnBackend["bucket"] = bucket;
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
