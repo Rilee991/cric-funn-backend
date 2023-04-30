@@ -7,22 +7,35 @@ const Excel = require("exceljs");
 const backupBetsData = async (req, res) => {
     try {
         const { db, bucket } = await global.cricFunnBackend;
+        console.log(`Fetching users data from db`);
         const resp = await db.collection("users").where("username", "in", ["ashu", "kelly", "desmond", "Broly", "SD", "Cypher33"]).get();
         const userDocs = await resp.docs;
+        console.log(`Users data fetched successfully!`);
 
+        console.log(`Preparing excel sheet`);
         const excelSheet = createExcel(userDocs);
+        console.log(`Excel sheet completed`);
 
+        console.log(`Writing data into buffer`);
         const buffer = await excelSheet.xlsx.writeBuffer();
+        console.log(`Buffer completed`);
         const fileName = `${moment().format("DD_MM_YYYY")}`;
         const file = bucket.file(fileName);
 
+        console.log(`Saving file and generating signed url`);
         await file.save(buffer, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const [signedUrl] = await file.getSignedUrl({
             action: 'read',
             expires: "03-17-2030",
         });
+        console.log(`File saved. Accessible URL: ${signedUrl}`);
 
-        await db.collection("backup_ipl_2023").doc(moment().format("YYYY_MM_DD_hh_mm_ss")).set({ url: signedUrl });
+        const docName = moment().format("YYYY_MM_DD_hh_mm_ss");
+        console.log(`Saving url into db with doc: ${docName}`);
+
+        await db.collection("backup_ipl_2023").doc(docName).set({ url: signedUrl });
+        console.log(`URL Saved!`);
+        console.log(`Operation completed. Backup successfull...`);
 
         res.json({ msg: 'backup uploaded successfully'});
     } catch (e) {
