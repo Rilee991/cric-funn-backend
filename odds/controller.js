@@ -23,6 +23,12 @@ const updateOddsForIpl = async (req, res) => {
         for(const match of matches) {
             const matchOddsVal = upcomingOdds.filter(uo => uo.commence_time == match.dateTimeGMT) || {};
             const outcomes = get(matchOddsVal, '[0].bookmakers[0].markets[0].outcomes', []);
+            
+            if(odds && odds[0].name != match.team1) {
+                const temp = odds[0];
+                odds[0] = odds[1];
+                odds[1] = temp;
+            }
             console.log(match.name, outcomes);
 
             await db.collection('ipl_matches').doc(match.id).update({
