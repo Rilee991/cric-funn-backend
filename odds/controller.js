@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const moment = require('moment');
 const axios = require('axios');
 const { get } = require('lodash');
+const { TABLES } = require('../enums');
 
 const updateOddsForIpl = async (req, res) => {
     try {
@@ -12,7 +13,7 @@ const updateOddsForIpl = async (req, res) => {
         console.log(`startdate: ${tomorrowStartDate}, enddate: ${tomorrowEndDate}`);
 
         console.log(`fetching matches`);
-        const resp = await db.collection('ipl_matches').where("dateTimeGMT", ">=", tomorrowStartDate).where("dateTimeGMT", "<=", tomorrowEndDate).get();
+        const resp = await db.collection(TABLES.MATCH_COLLECTION).where("dateTimeGMT", ">=", tomorrowStartDate).where("dateTimeGMT", "<=", tomorrowEndDate).get();
         const matches = resp.docs.map(doc => doc.data());
         console.log(`${matches.length} matches found`);
 
@@ -31,7 +32,7 @@ const updateOddsForIpl = async (req, res) => {
             }
             console.log(match.name, outcomes);
 
-            await db.collection('ipl_matches').doc(match.id).update({
+            await db.collection(TABLES.MATCH_COLLECTION).doc(match.id).update({
                 odds: outcomes
             });
         }

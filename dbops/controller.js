@@ -3,12 +3,13 @@ const moment = require('moment');
 const axios = require('axios');
 const { get, orderBy } = require('lodash');
 const Excel = require("exceljs");
+const { TABLES } = require('../enums');
 
 const backupBetsData = async (req, res) => {
     try {
         const { db, bucket } = await global.cricFunnBackend;
         console.log(`Fetching users data from db`);
-        const resp = await db.collection("users").where("username", "in", ["ashu", "kelly", "desmond", "Broly", "SD", "Cypher33"]).get();
+        const resp = await db.collection(TABLES.USER_COLLECTION).where("username", "in", ["ashu", "kelly", "desmond", "Broly", "SD", "Cypher33"]).get();
         const userDocs = await resp.docs;
         console.log(`Users data fetched successfully!`);
 
@@ -19,21 +20,39 @@ const backupBetsData = async (req, res) => {
         console.log(`Writing data into buffer`);
         const buffer = await excelSheet.xlsx.writeBuffer();
         console.log(`Buffer completed`);
-        const fileName = `${moment().format("DD_MM_YYYY")}`;
-        const file = bucket.file(fileName);
+        const now = moment();
+        const fileName = `${now.format("YYYY_MM_DD")}`;
+        const file = bucket.file(`backups/${fileName}`);
 
         console.log(`Saving file and generating signed url`);
         await file.save(buffer, { contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const [signedUrl] = await file.getSignedUrl({
             action: 'read',
-            expires: "03-17-2030",
+            expires: "03-22-2099",
         });
         console.log(`File saved. Accessible URL: ${signedUrl}`);
 
         const docName = moment().format("YYYY_MM_DD_hh_mm_ss");
         console.log(`Saving url into db with doc: ${docName}`);
 
-        await db.collection("backup_ipl_2023").doc(docName).set({ url: signedUrl });
+        const docRef = db.collection(TABLES.CONFIGURATION_COLLECTION).doc("BACKUPS");
+        const docSnapshot = await docRef.get();
+        const currData = docSnapshot.data();
+
+        if(!docSnapshot.exists) {
+            const record = {
+                [`${now.format("YYYY")}-${now.format("MM")}`]: { [`${now.format("DD")}`]: signedUrl }
+            }
+
+            ref.set(record);
+        } else {
+            const record = {
+                ...currData,
+                [`${now.format("YYYY")}-${now.format("MM")}`]: { [`${now.format("DD")}`]: signedUrl }
+            }
+
+            docRef.update(record);
+        }
         console.log(`URL Saved!`);
         console.log(`Operation completed. Backup successfull...`);
 
@@ -67,10 +86,12 @@ const restoreDataForUsername = async (req, res) => {
     try {
         const { db } = await global.cricFunnBackend;
 
-        const resp = await db.collection("backup_ipl_2023").get();
-        const [latestDoc] = orderBy(resp.docs.map(doc => ({ ...doc.data(), id: doc.id })), ["id"],["desc"]);
+        const resp = await db.collection(TABLES.CONFIGURATION_COLLECTION).doc("BACKUPS").get();
+        const backups = resp.data();
+        const latestMonthYearDoc = backups[Object.keys(backups).sort().reverse()[0]];
+        const latestDayDoc = latestMonthYearDoc[Object.keys(latestMonthYearDoc).sort().reverse()[0]];
         
-        const excelBuff = await axios({ url: latestDoc.url, method: "get", responseType: 'arraybuffer' });
+        const excelBuff = await axios({ url: latestDayDoc, method: "get", responseType: 'arraybuffer' });
         const excelSheet = new Excel.Workbook();
         
         await excelSheet.xlsx.load(excelBuff.data);
@@ -96,7 +117,7 @@ const restoreDataForUsername = async (req, res) => {
             }
         });
 
-        await db.collection("users").doc(username).update(userObj);
+        await db.collection(TABLES.USER_COLLECTION).doc(username).update(userObj);
 
         return res.status(200).json({ message: "Backup restored for user:", username});
     } catch (e) {
