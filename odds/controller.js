@@ -23,17 +23,18 @@ const updateOddsForIpl = async (req, res) => {
         
         for(const match of matches) {
             const matchOddsVal = upcomingOdds.filter(uo => uo.commence_time == match.dateTimeGMT) || {};
-            const outcomes = get(matchOddsVal, '[0].bookmakers[0].markets[0].outcomes', []);
+            const defaultOdds = [{ name: match.teamInfo[0].name, price: 1 }, { name: match.teamInfo[1].name, price: 1 }];
+            const odds = get(matchOddsVal, '[0].bookmakers[0].markets[0].outcomes', defaultOdds);
             
             if(odds && odds[0].name != match.team1) {
                 const temp = odds[0];
                 odds[0] = odds[1];
                 odds[1] = temp;
             }
-            console.log(match.name, outcomes);
+            console.log(match.name, odds);
 
             await db.collection(TABLES.MATCH_COLLECTION).doc(match.id).update({
-                odds: outcomes
+                odds: odds
             });
         }
         console.log(`Updation completed for ${new Date()}`);
@@ -51,7 +52,7 @@ const updateOddsForIpl = async (req, res) => {
 const getUpcomingOdds = async () => {
     const config = {
         method: 'get',
-        url: 'https://api.the-odds-api.com/v4/sports/cricket_ipl/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',
+        url: 'https://api.the-odds-api.com/v4/sports/cricket_international_t20/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',//'https://api.the-odds-api.com/v4/sports/cricket_ipl/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',
         headers: { }
     };
 
