@@ -1,8 +1,8 @@
 const admin = require('firebase-admin');
 const moment = require('moment');
 const axios = require('axios');
-const { get, orderBy } = require('lodash');
 const Excel = require("exceljs");
+
 const { TABLES } = require('../enums');
 
 const backupBetsData = async (req, res) => {
@@ -35,20 +35,28 @@ const backupBetsData = async (req, res) => {
         const docName = moment().format("YYYY_MM_DD_hh_mm_ss");
         console.log(`Saving url into db with doc: ${docName}`);
 
-        const docRef = db.collection(TABLES.CONFIGURATION_COLLECTION).doc("BACKUPS");
+        const docRef = db.collection(TABLES.CONFIGURATION_COLLECTION).doc(`${now.format("YYYY-MM-DD")}`);
         const docSnapshot = await docRef.get();
         const currData = docSnapshot.data();
 
         if(!docSnapshot.exists) {
             const record = {
-                [`${now.format("YYYY")}-${now.format("MM")}`]: { [`${now.format("DD")}`]: signedUrl }
-            }
+                "backupUrl": signedUrl,
+                "createdAt": getFirebaseCurrentTime(),
+                "createdBy": "backupBetsData",
+                "updatedAt": getFirebaseCurrentTime(),
+                "updatedBy": "backupBetsData",
+                "backupCreatedAt": getFirebaseCurrentTime()
+            };
 
-            ref.set(record);
+            docRef.set(record);
         } else {
             const record = {
                 ...currData,
-                [`${now.format("YYYY")}-${now.format("MM")}`]: { [`${now.format("DD")}`]: signedUrl }
+                "backupUrl": signedUrl,
+                "updatedAt": getFirebaseCurrentTime(),
+                "updatedBy": "backupBetsData",
+                "backupCreatedAt": getFirebaseCurrentTime()
             }
 
             docRef.update(record);
@@ -84,14 +92,17 @@ const restoreDataForUsername = async (req, res) => {
     const { username = "batman" } = req.body;
 
     try {
+        const now = moment();
         const { db } = await global.cricFunnBackend;
 
-        const resp = await db.collection(TABLES.CONFIGURATION_COLLECTION).doc("BACKUPS").get();
-        const backups = resp.data();
-        const latestMonthYearDoc = backups[Object.keys(backups).sort().reverse()[0]];
-        const latestDayDoc = latestMonthYearDoc[Object.keys(latestMonthYearDoc).sort().reverse()[0]];
-        
-        const excelBuff = await axios({ url: latestDayDoc, method: "get", responseType: 'arraybuffer' });
+        const resp = await db.collection(TABLES.CONFIGURATION_COLLECTION).orderBy("backupCreatedAt", "desc").limit(1).get();
+        const [configDetails] = resp.docs.map(doc => doc.data());
+
+        if(!configDetails.backupUrl)    return res.status(200).json({ message: "No backup url found" });
+
+        console.log(`Backup url found for ${new Date(configDetails.backupCreatedAt._seconds*1000)}`)
+
+        const excelBuff = await axios({ url: configDetails.backupUrl, method: "get", responseType: 'arraybuffer' });
         const excelSheet = new Excel.Workbook();
         
         await excelSheet.xlsx.load(excelBuff.data);
@@ -122,8 +133,12 @@ const restoreDataForUsername = async (req, res) => {
         return res.status(200).json({ message: "Backup restored for user:", username});
     } catch (e) {
         console.log(e);
-        res.status(500).json({ message: `Failed to restore data for ${username}`, error: e });
+        return res.status(500).json({ message: `Failed to restore data for ${username}`, error: e });
     }
+}
+
+const getFirebaseCurrentTime = () => {
+    return admin.firestore.Timestamp.fromDate(new Date());
 }
 
 module.exports = {
