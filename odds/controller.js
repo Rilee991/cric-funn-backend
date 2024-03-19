@@ -52,7 +52,7 @@ const updateOddsForIpl = async (req, res) => {
 const getUpcomingOdds = async () => {
     const config = {
         method: 'get',
-        url: 'https://api.the-odds-api.com/v4/sports/cricket_international_t20/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',//'https://api.the-odds-api.com/v4/sports/cricket_ipl/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',
+        url: 'https://api.the-odds-api.com/v4/sports/cricket_ipl/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',//'https://api.the-odds-api.com/v4/sports/cricket_international_t20/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',
         headers: { }
     };
 
