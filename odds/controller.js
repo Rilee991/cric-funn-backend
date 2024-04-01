@@ -25,7 +25,12 @@ const updateOddsForIpl = async (req, res) => {
             const matchOddsVal = upcomingOdds.filter(uo => uo.commence_time == match.dateTimeGMT) || {};
             const defaultOdds = [{ name: match.teamInfo[0].name, price: 1 }, { name: match.teamInfo[1].name, price: 1 }];
             const odds = get(matchOddsVal, '[0].bookmakers[0].markets[0].outcomes', defaultOdds);
-            
+            if(odds[0]?.name === "Royal Challengers Bangalore")
+                odds[0].name = "Royal Challengers Bangalore";
+
+            if(odds[1]?.name === "Royal Challengers Bangalore")
+                odds[1].name = "Royal Challengers Bangalore";
+
             if(odds && odds[0].name != match.team1) {
                 const temp = odds[0];
                 odds[0] = odds[1];
