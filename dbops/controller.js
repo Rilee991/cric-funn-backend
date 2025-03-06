@@ -71,6 +71,68 @@ const backupBetsData = async (req, res) => {
     }
 }
 
+const backupYearData = async (req, res) => {
+    try {
+        const { db, bucket } = await global.cricFunnBackend;
+        // console.log(`Fetching users data from db`);
+        // const resp = await db.collection(TABLES.USER_COLLECTION).get();
+        // const userDocs = await resp.docs;
+        // console.log(`Users data fetched successfully!`);
+
+
+        // THIS IS FOR STORING DATA FROM EXCEL SHEET
+
+        // let workbook = new Excel.Workbook();
+        // const fileName = '01_06_2023.xlsx';
+        // const userDocs = [];
+
+        // workbook.xlsx.readFile(fileName)
+        // .then(function() {
+        //     let worksheets = workbook.worksheets;
+
+        //     worksheets.forEach(worksheet => {
+        //         const user = {};
+
+        //         worksheet.eachRow({ includeEmpty: true }, function(row, rowNumber) {
+        //             if(rowNumber === 1) {
+        //                 row.values.forEach((col, idx) => user[idx] = col);
+        //             } else {
+        //                 row.values.forEach((val, idx) => {
+        //                     const col = user[idx];
+        //                     user[col] = ["bets", "updatedAt"].includes(col) ? JSON.parse(val) : val;
+
+        //                     delete user[idx];
+        //                 });
+        //             }
+        //         });
+
+        //         userDocs.push(user);
+        //     });
+
+        //     userDocs.forEach(async (user, idx) => {
+        //         await db.collection("users_2023_ipl_dump").doc(user.username).set(user);
+        //         console.log(idx);
+        //     });
+        // });
+
+        // THIS IS FOR STORING DATA FROM ANOTHER TABLE IN FIREBASE
+
+        // userDocs.forEach(async (user, idx) => {
+        //     await db.collection("users_2024_ipl_dump").doc(user.id).set(user.data());
+        //     console.log(idx);
+        // });
+
+        
+        console.log(`URL Saved!`);
+        console.log(`Operation completed. Backup successfull...`);
+
+        res.json({ msg: 'backup uploaded successfully'});
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({ message: `Failed to take backup on ${new Date()}`, error: e });
+    }
+}
+
 const createExcel = (docs) => {
     const workbook = new Excel.Workbook();
 
@@ -143,5 +205,6 @@ const getFirebaseCurrentTime = () => {
 
 module.exports = {
     backupBetsData,
+    backupYearData,
     restoreDataForUsername
 }

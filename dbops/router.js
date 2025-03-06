@@ -6,6 +6,7 @@ module.exports = () => {
     const router = Router({ mergeParams: true });
 
     router.route('/backupBetsData').post(controller.backupBetsData);
+    router.route('/backupYearData').post(controller.backupYearData);
     router.route('/restoreDataForUsername').post(controller.restoreDataForUsername);
 
     return router;

@@ -11,6 +11,9 @@ module.exports = () => {
     .get('/healthcheck', (req, res) => {
         res.send('cric-funn-backend is up and running');
     })
+    .get('/env', (req, res) => {
+        res.send('Env: ' + JSON.stringify(process.env));
+    })
     .all('*', () => {
         throw new Error("Api doesn't exists");
     });
