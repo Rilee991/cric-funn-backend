@@ -5,21 +5,28 @@ const { get } = require('lodash');
 const { TABLES } = require('../enums');
 
 const updateOddsForIpl = async (req, res) => {
+    const apiResp = [];
     try {
         const { db } = await global.cricFunnBackend;
         console.log(`Inside updateOddsForIpl: start - ${new Date()}`);
+        apiResp.push(`Inside updateOddsForIpl: start - ${new Date()}`);
         const tomorrowStartDate = moment().add(1,"day").startOf("day").toISOString();
         const tomorrowEndDate = moment().add(1,"day").endOf("day").toISOString();
         console.log(`startdate: ${tomorrowStartDate}, enddate: ${tomorrowEndDate}`);
+        apiResp.push(`startdate: ${tomorrowStartDate}, enddate: ${tomorrowEndDate}`);
 
         console.log(`fetching matches`);
+        apiResp.push(`fetching matches`);
         const resp = await db.collection(TABLES.MATCH_COLLECTION).where("dateTimeGMT", ">=", tomorrowStartDate).where("dateTimeGMT", "<=", tomorrowEndDate).get();
         const matches = resp.docs.map(doc => doc.data());
         console.log(`${matches.length} matches found`);
+        apiResp.push(`${matches.length} matches found`);
 
         console.log('fetching odds');
+        apiResp.push('fetching odds');
         const upcomingOdds = await getUpcomingOdds();
         console.log('fetching odds completed');
+        apiResp.push('fetching odds completed');
         
         for(const match of matches) {
             const matchOddsVal = upcomingOdds.filter(uo => uo.commence_time == match.dateTimeGMT) || {};
@@ -37,19 +44,23 @@ const updateOddsForIpl = async (req, res) => {
                 odds[1] = temp;
             }
             console.log(match.name, odds);
+            apiResp.push(match.name, odds);
 
             await db.collection(TABLES.MATCH_COLLECTION).doc(match.id).update({
                 odds: odds
             });
+            apiResp.push("Odds updated!");
         }
         console.log(`Updation completed for ${new Date()}`);
+        apiResp.push(`Updation completed for ${new Date()}`);
 
-        res.json({ msg: 'odds updated successfully'});
+        res.json({ msg: 'odds updated successfully', apiResp });
     } catch (e) {
         console.log(e);
         res.status(500).json({
             message: "Failed to update odds",
-            error: e
+            error: e,
+            apiResp
         });
     }
 }
@@ -57,7 +68,7 @@ const updateOddsForIpl = async (req, res) => {
 const getUpcomingOdds = async () => {
     const config = {
         method: 'get',
-        url: 'https://api.the-odds-api.com/v4/sports/cricket_ipl/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',//'https://api.the-odds-api.com/v4/sports/cricket_international_t20/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',
+        url: 'https://api.the-odds-api.com/v4/sports/cricket_ipl/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',//'https://api.the-odds-api.com/v4/sports/cricket_icc_trophy/odds/?apiKey=f8330878dd0337f2838d2493f69bff14&regions=uk&dateFormat=iso',
         headers: { }
     };
 

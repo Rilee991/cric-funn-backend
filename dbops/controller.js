@@ -9,7 +9,7 @@ const backupBetsData = async (req, res) => {
     try {
         const { db, bucket } = await global.cricFunnBackend;
         console.log(`Fetching users data from db`);
-        const resp = await db.collection(TABLES.USER_COLLECTION).where("username", "in", ["ashu", "kelly", "desmond", "Broly", "SD", "Cypher33"]).get();
+        const resp = await db.collection(TABLES.USER_COLLECTION).where("username", "in", ["ashu", "kelly", "desmond", "Himanshu sahu", "Broly", "SD", "Cypher33"]).get();
         const userDocs = await resp.docs;
         console.log(`Users data fetched successfully!`);
 
