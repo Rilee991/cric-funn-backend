@@ -4,6 +4,7 @@ const axios = require('axios');
 const Excel = require("exceljs");
 
 const { TABLES } = require('../enums');
+const { round } = require('lodash');
 
 const backupBetsData = async (req, res) => {
     try {
@@ -203,8 +204,101 @@ const getFirebaseCurrentTime = () => {
     return admin.firestore.Timestamp.fromDate(new Date());
 }
 
+const generateCareerData = async (req, res) => {
+    try {
+        const colls = ["users_2022_ipl_dump", "users_2023_ipl_dump", "users_2024_ipl_dump"];
+        const yearWiseStats = [];
+
+        const { db } = await global.cricFunnBackend;
+
+        for(const coll of colls) {
+            const resp = await db.collection(coll).where("username", "in", ["kelly", "ashu", "desmond", "Himanshu sahu", "Broly", "SD", "Cypher33"]).get();
+            const userDocs = await resp.docs;
+            const season = coll.split("_")[1];
+
+            console.log(coll);
+
+            for(const userResp of userDocs) {
+                const { username, bets = [], startingPoints = 0 } = userResp.data();
+                console.log(username);
+                let play = 0, win = 0, loss = 0, miss = 0, journey = [], maxWinStreak = 0, maxLoseStreak = 0,
+                avgBetPoints = 0, maxPoints = 0, maxPointsBetInAMatch = 0, leastPointsBetInAMatch = Number.MAX_VALUE,
+                betTimeAnalysis = {"12amTo10am": 0, "10amTo4pm": 0, "4pmTo7pm": 0, "7pmTo12am": 0};
+
+                let points = parseInt(startingPoints), results = "", pointsBet = 0;
+
+                journey.push(points);
+                maxPoints = points;
+
+                for(const bet of bets) {
+                    const { selectedTeam, selectedPoints, odds, isBetDone, betWon, hasMissed } = bet;
+                    if(isBetDone) {
+                        play++;
+
+                        if(betWon) {
+                            win++;
+                            points += Math.ceil(parseInt(selectedPoints) * parseFloat(odds?.[selectedTeam] || 1.0));
+                            journey.push(points);
+                            results += 'W';
+                            maxPoints = Math.max(maxPoints, points);
+                        } else {
+                            loss++;
+                            points -= parseInt(selectedPoints);
+                            journey.push(points);
+                            results += 'L';
+                        }
+
+                        pointsBet += parseInt(selectedPoints);
+                        maxPointsBetInAMatch = Math.max(maxPointsBetInAMatch, parseInt(selectedPoints));
+                        leastPointsBetInAMatch = Math.min(leastPointsBetInAMatch, parseInt(selectedPoints));
+
+                        const betTime = new Date(bet.betTime * 1000);
+                        const hour = betTime.getHours();
+                        // const mins = betTime.getMinutes();
+
+                        if(hour < 10)
+                            betTimeAnalysis["12amTo10am"]++;
+                        else if(hour < 16)
+                            betTimeAnalysis["10amTo4pm"]++;
+                        else if(hour < 19)
+                            betTimeAnalysis["4pmTo7pm"]++;
+                        else
+                            betTimeAnalysis["7pmTo12am"]++;
+                    } else if(hasMissed) {
+                        miss++;
+                        points -= parseInt(selectedPoints);
+                        journey.push(points);
+                        results += 'M';
+                    }
+
+                    // if(!bet.isBetDone && parseInt(bet.selectedPoints) === 50) {
+                    //     bet.hasMissed = true;
+                    // }
+                }
+
+                maxWinStreak = Math.max(...results.split(/[LM]/).map(w => w.length));
+                maxLoseStreak = Math.max(...results.split(/[WM]/).map(w => w.length));
+                avgBetPoints = round(pointsBet/(play || 1), 2);
+
+                await db.collection(TABLES.USER_CAREER_COLLECTION).doc(username).update({
+                    [season]: {
+                        play, win, loss, miss, journey, maxWinStreak, maxLoseStreak, avgBetPoints, maxPoints,
+                        maxPointsBetInAMatch, leastPointsBetInAMatch: leastPointsBetInAMatch === Number.MAX_VALUE ? 0 : leastPointsBetInAMatch, betTimeAnalysis
+                    }
+                });
+            }
+        }
+
+        return res.json({ msg: "career data generated" });
+    } catch(err) {
+        console.log(err);
+        res.status(500).json({ err });
+    }
+}
+
 module.exports = {
     backupBetsData,
     backupYearData,
-    restoreDataForUsername
+    restoreDataForUsername,
+    generateCareerData
 }

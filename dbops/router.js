@@ -8,6 +8,7 @@ module.exports = () => {
     router.route('/backupBetsData').post(controller.backupBetsData);
     router.route('/backupYearData').post(controller.backupYearData);
     router.route('/restoreDataForUsername').post(controller.restoreDataForUsername);
+    router.route('/generateCareerData').post(controller.generateCareerData);
 
     return router;
 };
