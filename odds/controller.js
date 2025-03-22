@@ -65,6 +65,84 @@ const updateOddsForIpl = async (req, res) => {
     }
 }
 
+const updateWeatherForIpl = async (req, res) => {
+    const apiResp = [];
+    try {
+        const { db } = await global.cricFunnBackend;
+        console.log(`Inside updateWeatherForIpl: start - ${new Date()}`);
+        apiResp.push(`Inside updateWeatherForIpl: start - ${new Date()}`);
+        const todayStartDate = moment().startOf("day").toISOString();
+        const todayEndDate = moment().endOf("day").toISOString();
+        console.log(`startdate: ${todayStartDate}, enddate: ${todayEndDate}`);
+        apiResp.push(`startdate: ${todayStartDate}, enddate: ${todayEndDate}`);
+
+        console.log(`fetching matches`);
+        apiResp.push(`fetching matches`);
+        const resp = await db.collection(TABLES.MATCH_COLLECTION).where("dateTimeGMT", ">=", todayStartDate).where("dateTimeGMT", "<=", todayEndDate).get();
+        const matches = resp.docs.map(doc => doc.data());
+        console.log(`${matches.length} matches found`);
+        apiResp.push(`${matches.length} matches found`);
+
+        
+        
+        for(const match of matches) {
+            console.log(`fetching weather for match: ${match}`);
+            apiResp.push(`fetching weather for match: ${match}`);
+
+            const venueArray = match.venue.split(",");
+            const coords = IPLVenues[venueArray[venueArray.length-1].slice(1)].join(",");
+            const upcomingWeather = await getUpcomingWeather(coords);
+            console.log('fetching weather completed');
+            apiResp.push('fetching weather completed');
+
+            await db.collection(TABLES.MATCH_COLLECTION).doc(match.id).update({
+                weather: upcomingWeather
+            });
+            apiResp.push("Weather updated!");
+        }
+        console.log(`Updation completed for ${new Date()}`);
+        apiResp.push(`Updation completed for ${new Date()}`);
+
+        res.json({ msg: 'weather updated successfully', apiResp });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({
+            message: "Failed to update weather",
+            error: e,
+            apiResp
+        });
+    }
+}
+
+const IPLVenues = {
+    Ahmedabad: [23.0915, 72.5975],
+    Bengaluru: [12.9788, 77.5993],
+    Chennai: [13.0627, 80.2792],
+    Delhi: [28.6353, 77.2410],
+    Dharamshala: [32.1976, 76.3251],
+    Guwahati: [26.1445, 91.7362],
+    Hyderabad: [17.4065, 78.5505],
+    Jaipur: [26.8965, 75.8069],
+    Kolkata: [22.5646, 88.3433],
+    Lucknow: [26.8283, 80.9113],
+    Mullanpur: [30.7862, 76.6755],
+    Mumbai: [18.9389, 72.8258],
+    Visakhapatnam: [17.7213, 83.3195]
+};  
+
+const getUpcomingWeather = async (coords) => {
+    const config = {
+        method: 'get',
+        url: `https://api.weatherstack.com/current?access_key=f44f0188e69910c683149ae9d0e413b3&query=${coords}`,
+        headers: { }
+    };
+
+    const resp = await axios(config);
+    const weatherResp = get(resp, 'data', []);
+
+    return weatherResp;
+}
+
 const getUpcomingOdds = async () => {
     const config = {
         method: 'get',
@@ -808,5 +886,6 @@ const syncMatches = async (req, res) => {
 
 module.exports = {
     updateOddsForIpl,
-    syncMatches
+    syncMatches,
+    updateWeatherForIpl
 }

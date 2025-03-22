@@ -207,7 +207,6 @@ const getFirebaseCurrentTime = () => {
 const generateCareerData = async (req, res) => {
     try {
         const colls = ["users_2022_ipl_dump", "users_2023_ipl_dump", "users_2024_ipl_dump"];
-        const yearWiseStats = [];
 
         const { db } = await global.cricFunnBackend;
 
@@ -221,6 +220,12 @@ const generateCareerData = async (req, res) => {
             for(const userResp of userDocs) {
                 const { username, bets = [], startingPoints = 0 } = userResp.data();
                 console.log(username);
+
+                // const updatedBets = await formatUserBets(username, season, bets);
+                // await db.collection(coll).doc(username).update({
+                //     bets: updatedBets
+                // });
+                // continue;
                 let play = 0, win = 0, loss = 0, miss = 0, journey = [], maxWinStreak = 0, maxLoseStreak = 0,
                 avgBetPoints = 0, maxPoints = 0, maxPointsBetInAMatch = 0, leastPointsBetInAMatch = Number.MAX_VALUE,
                 betTimeAnalysis = {"12amTo10am": 0, "10amTo4pm": 0, "4pmTo7pm": 0, "7pmTo12am": 0};
@@ -294,6 +299,20 @@ const generateCareerData = async (req, res) => {
         console.log(err);
         res.status(500).json({ err });
     }
+}
+
+const formatUserBets = async (username, season, bets) => {
+    console.log(username);
+
+    if(season === "2024") {
+        if(username === "Broly") {
+            bets = bets.slice(0, 74);
+        } else if(username === "Cypher33" || username === "SD" || username === "desmond" || username === "kelly") {
+            bets = bets.slice(0, 73);
+        }
+    }
+
+    return bets;
 }
 
 module.exports = {
